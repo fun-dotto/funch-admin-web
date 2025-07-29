@@ -1,8 +1,8 @@
 import { MenuRepository } from "../interfaces/MenuRepository";
-import { Menu, OriginalMenu } from "../../types/Menu";
+import { Menu, OriginalMenu, MenuItem } from "../../types/Menu";
 import { getBytes, ref } from "firebase/storage";
 import { storage, database } from "../../infrastructure/firebase";
-import { collection, getDocs, query } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc } from "firebase/firestore";
 
 export class FirebaseMenuRepository implements MenuRepository {
   async getAllMenus(): Promise<Menu[]> {
@@ -76,5 +76,112 @@ export class FirebaseMenuRepository implements MenuRepository {
     });
 
     return originalMenus;
+  }
+
+  async getRawMenuWithPrices(): Promise<MenuItem[]> {
+    const pathReference = ref(storage, "funch/menu.json");
+    const bytes = await getBytes(pathReference);
+    const jsonString = new TextDecoder().decode(bytes);
+    const jsonData: {
+      item_code: number;
+      title: string;
+      price: { large?: number; medium: number; small?: number };
+      image: string;
+      category: number;
+      large: boolean;
+      small: boolean;
+      energy: number;
+    }[] = JSON.parse(jsonString);
+
+    return jsonData.map((data) => {
+      const prices: { small?: number; medium: number; large?: number } = {
+        medium: data.price.medium,
+      };
+
+      if (data.price.small) {
+        prices.small = data.price.small;
+      }
+      if (data.price.large) {
+        prices.large = data.price.large;
+      }
+
+      return {
+        name: data.title,
+        category_id: data.category,
+        prices,
+        id: data.item_code,
+      };
+    });
+  }
+
+  async getAllDailyMenuDates(): Promise<string[]> {
+    const docRef = query(
+      collection(database, "funch_daily_menu"),
+      orderBy("date", "asc")
+    );
+    const docSnap = await getDocs(docRef);
+
+    const dates: string[] = [];
+    docSnap.forEach((doc) => {
+      dates.push(doc.id);
+    });
+
+    return dates;
+  }
+
+  async getDailyMenuByDate(date: string): Promise<{
+    common_menu_ids: number[];
+    original_menu_ids: string[];
+  } | null> {
+    const docRef = doc(database, "funch_daily_menu", date);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return null;
+    }
+
+    const data = docSnap.data();
+    return {
+      common_menu_ids: data.common_menu_ids || [],
+      original_menu_ids: data.original_menu_ids || [],
+    };
+  }
+
+  async getAllMonthlyMenuMonths(): Promise<string[]> {
+    const docRef = query(
+      collection(database, "funch_monthly_menu"),
+      orderBy("date", "asc")
+    );
+    const docSnap = await getDocs(docRef);
+
+    const months: string[] = [];
+    docSnap.forEach((doc) => {
+      const docId = doc.id;
+      const year = docId.substring(0, 4);
+      const month = docId.substring(4, 6);
+      months.push(`${year}-${month}`);
+    });
+
+    return months;
+  }
+
+  async getMonthlyMenuByMonth(month: string): Promise<{
+    common_menu_ids: number[];
+    original_menu_ids: string[];
+  } | null> {
+    const formattedMonth = month.replace(/-/g, "");
+
+    const docRef = doc(database, "funch_monthly_menu", formattedMonth);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return null;
+    }
+
+    const data = docSnap.data();
+    return {
+      common_menu_ids: data.common_menu_ids || [],
+      original_menu_ids: data.original_menu_ids || [],
+    };
   }
 }

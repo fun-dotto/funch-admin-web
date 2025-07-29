@@ -29,7 +29,7 @@
 ### 📝 コード生成・ファイル作成時のルール
 
 - **必須**: ファイルの最終行は改行で終わること
-- **必須**: 不要な空白行やインデントを挿入しないこと
+- **必須**: 不要な空白行やインデント，空白を挿入しないこと
 - **必須**: リスト項目の後に不要な空白やプレースホルダーを残さないこと
 - **必須**: マークダウンファイルでは適切な改行とスペーシングを保つこと
 - **禁止**: テンプレートファイル作成時に `- ` や `1. ` の後に余分なスペースやプレースホルダーを入れること
@@ -249,13 +249,13 @@ components/                  # UI Layer
 
 ### UI/UX
 
-- **shadcn/ui**: モダンなUIコンポーネントライブラリ
+- **shadcn/ui**: モダンな UI コンポーネントライブラリ
 - **lucide-react**: 0.525.0 - アイコンライブラリ
 - **react-icons**: 5.3.0 - アイコンライブラリ
 - **@radix-ui**: コンポーネントライブラリ
 - **@dnd-kit/core**: 6.1.0 - ドラッグアンドドロップ
 - **clsx**: 2.1.1 - 条件付きクラス名管理
-- **tailwind-merge**: 3.3.1 - TailwindCSSクラスのマージ
+- **tailwind-merge**: 3.3.1 - TailwindCSS クラスのマージ
 - **class-variance-authority**: 0.7.1 - バリアント管理
 
 ### データベース・認証
@@ -271,13 +271,15 @@ components/                  # UI Layer
 
 ### shadcn/ui 設定
 
-**shadcn/ui コンポーネントシステム**: プロジェクトはモダンなUIコンポーネントライブラリ shadcn/ui を使用します：
+**shadcn/ui コンポーネントシステム**: プロジェクトはモダンな UI コンポーネントライブラリ shadcn/ui を使用します：
 
 **設定ファイル**:
-- `components.json`: shadcn/ui 設定（New Yorkスタイル、TypeScript、Tailwind CSS変数使用）
+
+- `components.json`: shadcn/ui 設定（New York スタイル、TypeScript、Tailwind CSS 変数使用）
 - `lib/utils.ts`: クラス名結合用ユーティリティ（`cn`関数）
 
-**利用可能なUIコンポーネント**:
+**利用可能な UI コンポーネント**:
+
 - `Button`: 複数バリアント対応ボタン
 - `Input`: 入力フィールドコンポーネント
 - `Checkbox`: チェックボックスコンポーネント
@@ -285,5 +287,6 @@ components/                  # UI Layer
 - `PriceInput`: 価格入力コンポーネント
 
 **コンポーネント配置**:
+
 - `components/ui/`: shadcn/ui コンポーネント
 - `@/components`, `@/lib/utils` などのパスエイリアス設定済み

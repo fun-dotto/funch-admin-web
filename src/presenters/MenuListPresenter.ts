@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { MenuItem } from "../types/Menu";
+import { MenuService } from "../services/MenuService";
+import { FirebaseMenuRepository } from "../repositories/firebase/MenuRepository";
 
 export const useMenuListPresenter = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -13,21 +15,16 @@ export const useMenuListPresenter = () => {
         setLoading(true);
         setError(null);
 
-        const [menuResponse, originalMenuResponse] = await Promise.all([
-          fetch("/api/menu"),
-          fetch("/api/original_menu"),
+        const menuRepository = new FirebaseMenuRepository();
+        const menuService = new MenuService(menuRepository);
+
+        const [menuData, originalMenuData] = await Promise.all([
+          menuService.getFormattedMenus(),
+          menuService.getFormattedOriginalMenus(),
         ]);
 
-        if (!menuResponse.ok || !originalMenuResponse.ok) {
-          throw new Error("API呼び出しに失敗しました");
-        }
-
-        const menuData = await menuResponse.json();
-        const originalMenuData = await originalMenuResponse.json();
-
-        // APIからのMenuItem形式をそのまま使用
-        setMenuItems(menuData.data.menus);
-        setOriginalMenuItems(originalMenuData.data.menus);
+        setMenuItems(menuData.menus);
+        setOriginalMenuItems(originalMenuData.menus);
       } catch (err) {
         setError(
           err instanceof Error

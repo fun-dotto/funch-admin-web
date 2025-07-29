@@ -337,38 +337,42 @@ export class ChangeMenuService {
 
   // 🚀 新機能: 重複チェック付き日次追加
   async saveDailyChangeWithDuplicateCheck(
-    date: Date, 
+    date: Date,
     menuItem: MenuItem,
     existingMenuData: Menu[],
     existingOriginalMenuData: OriginalMenu[],
-    existingChangeData: { commonMenuIds: Record<string, boolean>, originalMenuIds: Record<string, boolean> }
-  ): Promise<'added' | 'revived' | 'ignored'> {
-    
+    existingChangeData: {
+      commonMenuIds: Record<string, boolean>;
+      originalMenuIds: Record<string, boolean>;
+    }
+  ): Promise<"added" | "revived" | "ignored"> {
     const isOriginalMenu = typeof menuItem.id === "string";
-    
+
     // 1. menuに既存かチェック
-    const existsInMenu = isOriginalMenu 
-      ? existingOriginalMenuData.some(m => m.id === menuItem.id)
-      : existingMenuData.some(m => m.item_code.toString() === menuItem.id.toString());
-    
+    const existsInMenu = isOriginalMenu
+      ? existingOriginalMenuData.some((m) => m.id === menuItem.id)
+      : existingMenuData.some(
+          (m) => m.item_code.toString() === menuItem.id.toString()
+        );
+
     if (existsInMenu) {
       // 2. 削除フラグチェック
       const hasDeletionFlag = isOriginalMenu
         ? existingChangeData.originalMenuIds[menuItem.id] === false
         : existingChangeData.commonMenuIds[menuItem.id] === false;
-      
+
       if (hasDeletionFlag) {
         // 3a. 削除フラグ除去（復活）
         await this.removeChangeEntry(date, menuItem.id, isOriginalMenu);
-        return 'revived';
+        return "revived";
       } else {
         // 3b. 何もしない（重複回避）- changeに追加しない
-        return 'ignored';
+        return "ignored";
       }
     } else {
       // 4. menuに存在しない場合のみ通常の追加処理
       await this.saveDailyChange(date, menuItem);
-      return 'added';
+      return "added";
     }
   }
 
@@ -379,79 +383,102 @@ export class ChangeMenuService {
     menuItem: MenuItem,
     existingMenuData: Menu[],
     existingOriginalMenuData: OriginalMenu[],
-    existingChangeData: { commonMenuIds: Record<string, boolean>, originalMenuIds: Record<string, boolean> }
-  ): Promise<'added' | 'revived' | 'ignored'> {
-    
+    existingChangeData: {
+      commonMenuIds: Record<string, boolean>;
+      originalMenuIds: Record<string, boolean>;
+    }
+  ): Promise<"added" | "revived" | "ignored"> {
     const isOriginalMenu = typeof menuItem.id === "string";
-    
+
     // 1. menuに既存かチェック
-    const existsInMenu = isOriginalMenu 
-      ? existingOriginalMenuData.some(m => m.id === menuItem.id)
-      : existingMenuData.some(m => m.item_code.toString() === menuItem.id.toString());
-    
+    const existsInMenu = isOriginalMenu
+      ? existingOriginalMenuData.some((m) => m.id === menuItem.id)
+      : existingMenuData.some(
+          (m) => m.item_code.toString() === menuItem.id.toString()
+        );
+
     if (existsInMenu) {
       // 2. 削除フラグチェック
       const hasDeletionFlag = isOriginalMenu
         ? existingChangeData.originalMenuIds[menuItem.id] === false
         : existingChangeData.commonMenuIds[menuItem.id] === false;
-      
+
       if (hasDeletionFlag) {
         // 3a. 削除フラグ除去（復活）
-        await this.removeMonthlyChangeEntry(year, month, menuItem.id, isOriginalMenu);
-        return 'revived';
+        await this.removeMonthlyChangeEntry(
+          year,
+          month,
+          menuItem.id,
+          isOriginalMenu
+        );
+        return "revived";
       } else {
         // 3b. 何もしない（重複回避）- changeに追加しない
-        return 'ignored';
+        return "ignored";
       }
     } else {
       // 4. menuに存在しない場合のみ通常の追加処理
       await this.saveMonthlyChange(year, month, menuItem);
-      return 'added';
+      return "added";
     }
   }
 
   // 日次変更エントリ除去
-  private async removeChangeEntry(date: Date, menuId: string | number, isOriginalMenu: boolean): Promise<void> {
+  private async removeChangeEntry(
+    date: Date,
+    menuId: string | number,
+    isOriginalMenu: boolean
+  ): Promise<void> {
     const { doc, updateDoc, deleteField } = await import("firebase/firestore");
     const { database } = await import("../infrastructure/firebase");
-    
+
     const dateStr = this.formatDateToString(date);
     const docRef = doc(database, "funch_daily_change", dateStr);
-    
-    const fieldPath = isOriginalMenu 
+
+    const fieldPath = isOriginalMenu
       ? `original_menu_ids.${menuId}`
       : `common_menu_ids.${menuId}`;
-    
+
     await updateDoc(docRef, {
-      [fieldPath]: deleteField()
+      [fieldPath]: deleteField(),
     });
   }
 
   // 月間変更エントリ除去
-  async removeMonthlyChangeEntry(year: number, month: number, menuId: string | number, isOriginalMenu: boolean): Promise<void> {
+  async removeMonthlyChangeEntry(
+    year: number,
+    month: number,
+    menuId: string | number,
+    isOriginalMenu: boolean
+  ): Promise<void> {
     const { doc, updateDoc, deleteField } = await import("firebase/firestore");
     const { database } = await import("../infrastructure/firebase");
-    
+
     const monthStr = this.formatMonthToString(year, month);
     const docRef = doc(database, "funch_monthly_change", monthStr);
-    
-    const fieldPath = isOriginalMenu 
+
+    const fieldPath = isOriginalMenu
       ? `original_menu_ids.${menuId}`
       : `common_menu_ids.${menuId}`;
-    
+
     await updateDoc(docRef, {
-      [fieldPath]: deleteField()
+      [fieldPath]: deleteField(),
     });
   }
 
   // 🚀 日次変更のリバート処理（change要素の削除）
-  async revertDailyChange(date: Date, menuId: string, isCommonMenu: boolean): Promise<void> {
+  async revertDailyChange(
+    date: Date,
+    menuId: string,
+    isCommonMenu: boolean
+  ): Promise<void> {
     await this.removeChangeEntry(date, menuId, !isCommonMenu);
   }
 
   // 🚀 全ての変更データを確定処理
   async confirmAllChanges(): Promise<void> {
-    const { collection, getDocs, doc, getDoc, setDoc, deleteDoc, Timestamp } = await import("firebase/firestore");
+    const { collection, getDocs, doc, getDoc, setDoc, deleteDoc, Timestamp } =
+      await import("firebase/firestore");
     const { database } = await import("../infrastructure/firebase");
 
     // 1. 全ての日次変更データを取得
@@ -459,7 +486,10 @@ export class ChangeMenuService {
     const dailyChangeSnapshot = await getDocs(dailyChangeCollection);
 
     // 2. 全ての月次変更データを取得
-    const monthlyChangeCollection = collection(database, "funch_monthly_change");
+    const monthlyChangeCollection = collection(
+      database,
+      "funch_monthly_change"
+    );
     const monthlyChangeSnapshot = await getDocs(monthlyChangeCollection);
 
     // 3. 日次変更データを処理
@@ -471,11 +501,11 @@ export class ChangeMenuService {
       // 実際のメニューデータを取得
       const menuDocRef = doc(database, "funch_daily_menu", dateStr);
       const menuDoc = await getDoc(menuDocRef);
-      
+
       let menuData = {
         common_menu_ids: [],
         original_menu_ids: [],
-        date: Timestamp.fromDate(date)
+        date: Timestamp.fromDate(date),
       };
 
       if (menuDoc.exists()) {
@@ -483,7 +513,10 @@ export class ChangeMenuService {
       }
 
       // 変更データを適用
-      const updatedMenuData = await this.applyChangesToMenu(menuData, changeData);
+      const updatedMenuData = await this.applyChangesToMenu(
+        menuData,
+        changeData
+      );
 
       // メニューデータを更新
       await setDoc(menuDocRef, updatedMenuData);
@@ -499,11 +532,11 @@ export class ChangeMenuService {
       // 実際のメニューデータを取得
       const menuDocRef = doc(database, "funch_monthly_menu", monthStr);
       const menuDoc = await getDoc(menuDocRef);
-      
+
       let menuData = {
         common_menu_ids: [],
         original_menu_ids: [],
-        date: Timestamp.fromDate(date)
+        date: Timestamp.fromDate(date),
       };
 
       if (menuDoc.exists()) {
@@ -511,7 +544,10 @@ export class ChangeMenuService {
       }
 
       // 変更データを適用
-      const updatedMenuData = await this.applyChangesToMenu(menuData, changeData);
+      const updatedMenuData = await this.applyChangesToMenu(
+        menuData,
+        changeData
+      );
 
       // メニューデータを更新
       await setDoc(menuDocRef, updatedMenuData);
@@ -527,7 +563,10 @@ export class ChangeMenuService {
   }
 
   // 変更データをメニューデータに適用
-  private async applyChangesToMenu(menuData: any, changeData: any): Promise<any> {
+  private async applyChangesToMenu(
+    menuData: any,
+    changeData: any
+  ): Promise<any> {
     let commonMenuIds = [...(menuData.common_menu_ids || [])];
     let originalMenuIds = [...(menuData.original_menu_ids || [])];
 
@@ -542,7 +581,7 @@ export class ChangeMenuService {
         }
       } else {
         // 削除
-        commonMenuIds = commonMenuIds.filter(id => id !== numericId);
+        commonMenuIds = commonMenuIds.filter((id) => id !== numericId);
       }
     }
 
@@ -556,14 +595,14 @@ export class ChangeMenuService {
         }
       } else {
         // 削除
-        originalMenuIds = originalMenuIds.filter(id => id !== menuId);
+        originalMenuIds = originalMenuIds.filter((id) => id !== menuId);
       }
     }
 
     return {
       ...menuData,
       common_menu_ids: commonMenuIds,
-      original_menu_ids: originalMenuIds
+      original_menu_ids: originalMenuIds,
     };
   }
 
