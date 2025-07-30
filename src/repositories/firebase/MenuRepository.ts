@@ -2,7 +2,7 @@ import { MenuRepository } from "../interfaces/MenuRepository";
 import { Menu, OriginalMenu, MenuItem } from "../../types/Menu";
 import { getBytes, ref } from "firebase/storage";
 import { storage, database } from "../../infrastructure/firebase";
-import { collection, getDocs, query, orderBy, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
 
 export class FirebaseMenuRepository implements MenuRepository {
   async getAllMenus(): Promise<Menu[]> {
@@ -76,6 +76,68 @@ export class FirebaseMenuRepository implements MenuRepository {
     });
 
     return originalMenus;
+  }
+
+  async createOriginalMenu(menu: OriginalMenu): Promise<OriginalMenu> {
+    const priceMap: { [key: string]: number } = {};
+
+    priceMap.medium = menu.price.medium;
+
+    if (menu.price.large && menu.price.large > 0) {
+      priceMap.large = menu.price.large;
+    }
+    if (menu.price.small && menu.price.small > 0) {
+      priceMap.small = menu.price.small;
+    }
+
+    const menuData = {
+      name: menu.title,
+      category_id: menu.category,
+      prices: priceMap,
+    };
+
+    const newMenuRef = await addDoc(
+      collection(database, "funch_original_menu"),
+      menuData
+    );
+
+    return {
+      ...menu,
+      id: newMenuRef.id,
+    };
+  }
+
+  async updateOriginalMenu(menu: OriginalMenu): Promise<OriginalMenu> {
+    if (!menu.id || menu.id === "0") {
+      throw new Error("メニューIDが無効です");
+    }
+
+    const priceMap: { [key: string]: number } = {};
+
+    priceMap.medium = menu.price.medium;
+
+    if (menu.price.large && menu.price.large > 0) {
+      priceMap.large = menu.price.large;
+    }
+    if (menu.price.small && menu.price.small > 0) {
+      priceMap.small = menu.price.small;
+    }
+
+    const menuData = {
+      name: menu.title,
+      category_id: menu.category,
+      prices: priceMap,
+    };
+
+    const menuRef = doc(database, "funch_original_menu", menu.id);
+    await updateDoc(menuRef, menuData);
+
+    return menu;
+  }
+
+  async deleteOriginalMenu(menuId: string): Promise<void> {
+    const menuRef = doc(database, "funch_original_menu", menuId);
+    await deleteDoc(menuRef);
   }
 
   async getRawMenuWithPrices(): Promise<MenuItem[]> {

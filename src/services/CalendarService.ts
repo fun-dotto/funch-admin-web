@@ -2,12 +2,16 @@ import { Menu, OriginalMenu, MenuItem } from "../types/Menu";
 import { UniqueIdentifier } from "@dnd-kit/core";
 import { CalendarMenuRepository } from "../repositories/interfaces/CalendarMenuRepository";
 import { ChangeMenuService } from "./ChangeMenuService";
+import { ChangeMenuRepository } from "../repositories/interfaces/ChangeMenuRepository";
 
 export class CalendarMenuService {
   private changeMenuService: ChangeMenuService;
 
-  constructor(private calendarMenuRepository: CalendarMenuRepository) {
-    this.changeMenuService = new ChangeMenuService();
+  constructor(
+    private calendarMenuRepository: CalendarMenuRepository,
+    private changeMenuRepository: ChangeMenuRepository
+  ) {
+    this.changeMenuService = new ChangeMenuService(changeMenuRepository);
   }
 
   async getMonthMenuData(

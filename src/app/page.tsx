@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/core";
 import { MenuItem } from "../types/Menu";
 import { ChangeMenuService } from "../services/ChangeMenuService";
+import { FirebaseChangeMenuRepository } from "../repositories/firebase/ChangeMenuRepository";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -26,7 +27,7 @@ export default function Home() {
     commonMenuIds: Record<string, boolean>;
     originalMenuIds: Record<string, boolean>;
   }>({ commonMenuIds: {}, originalMenuIds: {} });
-  const changeMenuService = new ChangeMenuService();
+  const changeMenuService = new ChangeMenuService(new FirebaseChangeMenuRepository());
   const calendarRef = useRef<CalendarRef>(null);
   const monthMenuRef = useRef<MonthMenuRef>(null);
 

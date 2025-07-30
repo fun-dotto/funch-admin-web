@@ -16,11 +16,12 @@ import { Menu, OriginalMenu } from "../src/types/Menu";
 import { useDroppable } from "@dnd-kit/core";
 import { MenuItemList, DisplayMenuItem } from "./MenuItemList";
 import { ChangeMenuService } from "../src/services/ChangeMenuService";
+import { FirebaseChangeMenuRepository } from "../src/repositories/firebase/ChangeMenuRepository";
 import { RemainingMenuDialog } from "./RemainingMenuDialog";
 
 const monthMenuRepository = new FirebaseMonthMenuRepository();
 const monthMenuService = new MonthMenuService(monthMenuRepository);
-const changeMenuService = new ChangeMenuService();
+const changeMenuService = new ChangeMenuService(new FirebaseChangeMenuRepository());
 
 type MonthMenuProps = {
   year: number;

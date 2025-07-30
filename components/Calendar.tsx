@@ -13,10 +13,12 @@ import { auth } from "../src/infrastructure/firebase";
 import { useCalendarMenuPresenter } from "../src/presenters/CalendarPresenter";
 import { CalendarMenuService } from "../src/services/CalendarService";
 import { FirebaseCalendarMenuRepository } from "../src/repositories/firebase/CalendarRepository";
+import { FirebaseChangeMenuRepository } from "../src/repositories/firebase/ChangeMenuRepository";
 import { MenuItemList, DisplayMenuItem } from "./MenuItemList";
 
 const calendarMenuRepository = new FirebaseCalendarMenuRepository();
-const calendarMenuService = new CalendarMenuService(calendarMenuRepository);
+const changeMenuRepository = new FirebaseChangeMenuRepository();
+const calendarMenuService = new CalendarMenuService(calendarMenuRepository, changeMenuRepository);
 
 type CalendarProps = {
   year?: number;

@@ -16,7 +16,7 @@ export class MenuService {
   private originalMenuCRUDService: OriginalMenuCRUDService;
 
   constructor(private menuRepository: MenuRepository) {
-    this.originalMenuCRUDService = new OriginalMenuCRUDService();
+    this.originalMenuCRUDService = new OriginalMenuCRUDService(menuRepository);
   }
 
   async getAllMenus(): Promise<Menu[]> {
