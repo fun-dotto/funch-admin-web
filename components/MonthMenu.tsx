@@ -64,7 +64,7 @@ const MonthMenu = forwardRef<MonthMenuRef, MonthMenuProps>(
       refreshMonthlyChangeOnly,
       refreshAllMenusData,
       getMenuNameById,
-    } = useMonthMenuPresenter(user, year, month, monthMenuService);
+    } = useMonthMenuPresenter(user, year, month, monthMenuService, changeMenuService);
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {

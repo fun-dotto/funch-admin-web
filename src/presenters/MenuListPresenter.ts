@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { MenuItem } from "../types/Menu";
 import { MenuService } from "../services/MenuService";
-import { FirebaseMenuRepository } from "../repositories/firebase/MenuRepository";
 
-export const useMenuListPresenter = () => {
+export const useMenuListPresenter = (menuService: MenuService) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [originalMenuItems, setOriginalMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,8 +14,6 @@ export const useMenuListPresenter = () => {
         setLoading(true);
         setError(null);
 
-        const menuRepository = new FirebaseMenuRepository();
-        const menuService = new MenuService(menuRepository);
 
         const [menuData, originalMenuData] = await Promise.all([
           menuService.getFormattedMenus(),

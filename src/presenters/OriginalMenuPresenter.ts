@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { OriginalMenu } from "../types/Menu";
 import { MenuService } from "../services/MenuService";
-import { FirebaseMenuRepository } from "../repositories/firebase/MenuRepository";
 
-export const useOriginalMenuPresenter = () => {
+export const useOriginalMenuPresenter = (menuService: MenuService) => {
   const [originalMenus, setOriginalMenus] = useState<OriginalMenu[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,9 +12,6 @@ export const useOriginalMenuPresenter = () => {
       setLoading(true);
       setError(null);
 
-      // Firestore直接操作でデータを取得
-      const menuRepository = new FirebaseMenuRepository();
-      const menuService = new MenuService(menuRepository);
 
       const originalMenus = await menuService.getOriginalMenus();
 

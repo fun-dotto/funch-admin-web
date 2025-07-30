@@ -5,6 +5,11 @@ import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { useDraggable } from "@dnd-kit/core";
 import { MenuItem } from "../src/types/Menu";
 import { useMenuListPresenter } from "../src/presenters/MenuListPresenter";
+import { MenuService } from "../src/services/MenuService";
+import { FirebaseMenuRepository } from "../src/repositories/firebase/MenuRepository";
+
+const menuRepository = new FirebaseMenuRepository();
+const menuService = new MenuService(menuRepository);
 
 const categoryOptions = [
   { value: "1", label: "主菜" },
@@ -24,7 +29,7 @@ type MenuListProps = {
 
 export const MenuList: FC<MenuListProps> = ({ className = "" }) => {
   const { originalMenuItems, loading, error, getCategoryMenus } =
-    useMenuListPresenter();
+    useMenuListPresenter(menuService);
 
   if (loading) {
     return (

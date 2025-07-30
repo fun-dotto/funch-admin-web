@@ -3,13 +3,13 @@ import { User } from "firebase/auth";
 import { Menu, OriginalMenu, MenuItem } from "../types/Menu";
 import { MonthMenuService } from "../services/MonthMenuService";
 import { ChangeMenuService } from "../services/ChangeMenuService";
-import { FirebaseChangeMenuRepository } from "../repositories/firebase/ChangeMenuRepository";
 
 export const useMonthMenuPresenter = (
   user: User | null,
   currentYear: number,
   currentMonth: number,
-  monthMenuService: MonthMenuService
+  monthMenuService: MonthMenuService,
+  changeMenuService: ChangeMenuService
 ) => {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [originalMenus, setOriginalMenus] = useState<OriginalMenu[]>([]);
@@ -21,7 +21,6 @@ export const useMonthMenuPresenter = (
   const [allOriginalMenus, setAllOriginalMenus] = useState<OriginalMenu[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const changeMenuService = new ChangeMenuService(new FirebaseChangeMenuRepository());
 
   useEffect(() => {
     const fetchMonthMenuData = async () => {

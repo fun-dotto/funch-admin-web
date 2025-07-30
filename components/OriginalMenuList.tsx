@@ -8,6 +8,10 @@ import { OriginalMenuEditForm } from "./OriginalMenuEditForm";
 import { ImageService } from "../src/services/ImageService";
 import { OriginalMenuCRUDService } from "../src/services/OriginalMenuCRUDService";
 import { FirebaseMenuRepository } from "../src/repositories/firebase/MenuRepository";
+import { MenuService } from "../src/services/MenuService";
+
+const menuRepository = new FirebaseMenuRepository();
+const menuService = new MenuService(menuRepository);
 
 type OriginalMenuListProps = {
   className?: string;
@@ -18,7 +22,7 @@ export const OriginalMenuList: FC<OriginalMenuListProps> = ({
 }) => {
   const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const { getAllMenus, loading, error, refresh } = useOriginalMenuPresenter();
+  const { getAllMenus, loading, error, refresh } = useOriginalMenuPresenter(menuService);
   const originalMenuCRUDService = new OriginalMenuCRUDService(new FirebaseMenuRepository());
 
   // 新規作成時の初期メニューオブジェクト
