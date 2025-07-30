@@ -18,6 +18,10 @@ import { MenuItem } from "../types/Menu";
 import { ChangeMenuService } from "../services/ChangeMenuService";
 import { FirebaseChangeMenuRepository } from "../repositories/firebase/ChangeMenuRepository";
 
+// ChangeMenuServiceのみpage.tsxで使用（ドラッグ&ドロップ処理用）
+const changeMenuRepository = new FirebaseChangeMenuRepository();
+const changeMenuService = new ChangeMenuService(changeMenuRepository);
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -27,7 +31,6 @@ export default function Home() {
     commonMenuIds: Record<string, boolean>;
     originalMenuIds: Record<string, boolean>;
   }>({ commonMenuIds: {}, originalMenuIds: {} });
-  const changeMenuService = new ChangeMenuService(new FirebaseChangeMenuRepository());
   const calendarRef = useRef<CalendarRef>(null);
   const monthMenuRef = useRef<MonthMenuRef>(null);
 

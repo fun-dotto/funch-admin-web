@@ -1,15 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { User } from "firebase/auth";
 import { Menu, OriginalMenu } from "../types/Menu";
 import { UniqueIdentifier } from "@dnd-kit/core";
-import { CalendarMenuService } from "../services/CalendarService";
+import { ServiceFactory } from "../services/ServiceFactory";
 
 export const useCalendarMenuPresenter = (
   user: User | null,
   currentYear: number,
-  currentMonth: number,
-  calendarMenuService: CalendarMenuService
+  currentMonth: number
 ) => {
+  // Presenter層はService層のみに依存（Repository層は知らない）
+  const services = useMemo(() => {
+    const calendarMenuService = ServiceFactory.createCalendarMenuService();
+    return { calendarMenuService };
+  }, []);
+
+  const { calendarMenuService } = services;
   const [menuData, setMenuData] = useState(new Map<UniqueIdentifier, Menu[]>());
   const [originalMenuData, setOriginalMenuData] = useState(
     new Map<UniqueIdentifier, OriginalMenu[]>()

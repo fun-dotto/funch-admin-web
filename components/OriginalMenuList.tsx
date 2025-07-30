@@ -5,13 +5,6 @@ import { OriginalMenu } from "../src/types/Menu";
 import { useOriginalMenuPresenter } from "../src/presenters/OriginalMenuPresenter";
 import { VscEdit } from "react-icons/vsc";
 import { OriginalMenuEditForm } from "./OriginalMenuEditForm";
-import { ImageService } from "../src/services/ImageService";
-import { OriginalMenuCRUDService } from "../src/services/OriginalMenuCRUDService";
-import { FirebaseMenuRepository } from "../src/repositories/firebase/MenuRepository";
-import { MenuService } from "../src/services/MenuService";
-
-const menuRepository = new FirebaseMenuRepository();
-const menuService = new MenuService(menuRepository);
 
 type OriginalMenuListProps = {
   className?: string;
@@ -22,8 +15,7 @@ export const OriginalMenuList: FC<OriginalMenuListProps> = ({
 }) => {
   const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const { getAllMenus, loading, error, refresh } = useOriginalMenuPresenter(menuService);
-  const originalMenuCRUDService = new OriginalMenuCRUDService(new FirebaseMenuRepository());
+  const { getAllMenus, loading, error, refresh, saveOriginalMenu, deleteOriginalMenu, uploadMenuImage, deleteMenuImage, getMenuImageUrl } = useOriginalMenuPresenter();
 
   // 新規作成時の初期メニューオブジェクト
   const createNewMenu = (): OriginalMenu => ({
@@ -38,14 +30,13 @@ export const OriginalMenuList: FC<OriginalMenuListProps> = ({
   const handleSave = async (updatedMenu: OriginalMenu, imageFile?: File) => {
     try {
       // Firestore直接操作で保存
-      const savedMenu = await originalMenuCRUDService.saveOriginalMenu(
+      const savedMenu = await saveOriginalMenu(
         updatedMenu
       );
 
       // 新規作成で画像がある場合は、生成されたIDを使って画像を保存
       if (imageFile && savedMenu && savedMenu.id) {
-        const imageService = new ImageService();
-        await imageService.uploadMenuImage(savedMenu.id, imageFile);
+        await uploadMenuImage(savedMenu.id, imageFile);
       }
 
       setEditingMenuId(null);
@@ -68,7 +59,7 @@ export const OriginalMenuList: FC<OriginalMenuListProps> = ({
   const handleDelete = async (menuId: string) => {
     try {
       // Firestore直接操作で削除
-      await originalMenuCRUDService.deleteOriginalMenu(menuId);
+      await deleteOriginalMenu(menuId);
 
       setEditingMenuId(null);
       refresh();
@@ -117,6 +108,9 @@ export const OriginalMenuList: FC<OriginalMenuListProps> = ({
                 onCancelEdit={() => setEditingMenuId(null)}
                 onSave={handleSave}
                 onDelete={handleDelete}
+                onUploadImage={uploadMenuImage}
+                onDeleteImage={deleteMenuImage}
+                onGetImageUrl={getMenuImageUrl}
               />
             ))}
 
@@ -128,6 +122,9 @@ export const OriginalMenuList: FC<OriginalMenuListProps> = ({
                   onCancel={handleCancelCreate}
                   onSave={handleSave}
                   onDelete={undefined}
+                  onUploadImage={uploadMenuImage}
+                  onDeleteImage={deleteMenuImage}
+                  onGetImageUrl={getMenuImageUrl}
                 />
               </div>
             )}
@@ -157,6 +154,10 @@ type OriginalMenuListItemProps = {
   onCancelEdit: () => void;
   onSave: (menu: OriginalMenu) => void;
   onDelete: (menuId: string) => void;
+  // 画像操作関数も渡すため追加
+  onUploadImage: (menuId: string, imageFile: File) => Promise<void>;
+  onDeleteImage: (menuId: string) => Promise<void>;
+  onGetImageUrl: (menuId: string) => Promise<string | null>;
 };
 
 const OriginalMenuListItem: FC<OriginalMenuListItemProps> = ({
@@ -166,6 +167,9 @@ const OriginalMenuListItem: FC<OriginalMenuListItemProps> = ({
   onCancelEdit,
   onSave,
   onDelete,
+  onUploadImage,
+  onDeleteImage,
+  onGetImageUrl,
 }) => {
   return (
     <div>
@@ -188,6 +192,9 @@ const OriginalMenuListItem: FC<OriginalMenuListItemProps> = ({
           onCancel={onCancelEdit}
           onSave={onSave}
           onDelete={onDelete}
+          onUploadImage={onUploadImage}
+          onDeleteImage={onDeleteImage}
+          onGetImageUrl={onGetImageUrl}
         />
       )}
     </div>

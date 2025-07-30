@@ -32,12 +32,16 @@ const SettingTab = () => {
       <div className="pt-4 flex-1 overflow-hidden">
         {activeTab === 0 && (
           <div className="h-full">
-            <MenuList className="w-full rounded h-full overflow-y-auto" />
+            <MenuList 
+              className="w-full rounded h-full overflow-y-auto"
+            />
           </div>
         )}
         {activeTab === 1 && (
           <div className="h-full">
-            <OriginalMenuList className="w-full rounded h-full overflow-y-auto" />
+            <OriginalMenuList 
+              className="w-full rounded h-full overflow-y-auto"
+            />
           </div>
         )}
       </div>

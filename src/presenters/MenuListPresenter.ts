@@ -1,8 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MenuItem } from "../types/Menu";
-import { MenuService } from "../services/MenuService";
+import { ServiceFactory } from "../services/ServiceFactory";
 
-export const useMenuListPresenter = (menuService: MenuService) => {
+export const useMenuListPresenter = () => {
+  // Presenter層はService層のみに依存（Repository層は知らない）
+  const services = useMemo(() => {
+    const menuService = ServiceFactory.createMenuService();
+    return { menuService };
+  }, []);
+
+  const { menuService } = services;
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [originalMenuItems, setOriginalMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);

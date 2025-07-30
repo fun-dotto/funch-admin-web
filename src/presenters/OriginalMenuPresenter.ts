@@ -1,8 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { OriginalMenu } from "../types/Menu";
-import { MenuService } from "../services/MenuService";
+import { ServiceFactory } from "../services/ServiceFactory";
 
-export const useOriginalMenuPresenter = (menuService: MenuService) => {
+export const useOriginalMenuPresenter = () => {
+  // Presenter層はService層のみに依存（Repository層は知らない）
+  const services = useMemo(() => {
+    const menuService = ServiceFactory.createMenuService();
+    const originalMenuCRUDService = ServiceFactory.createOriginalMenuCRUDService();
+    const imageService = ServiceFactory.createImageService();
+    return { menuService, originalMenuCRUDService, imageService };
+  }, []);
+
+  const { menuService, originalMenuCRUDService, imageService } = services;
   const [originalMenus, setOriginalMenus] = useState<OriginalMenu[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +54,32 @@ export const useOriginalMenuPresenter = (menuService: MenuService) => {
     fetchOriginalMenus();
   };
 
+  const saveOriginalMenu = async (menu: OriginalMenu): Promise<OriginalMenu> => {
+    return await originalMenuCRUDService.saveOriginalMenu(menu);
+  };
+
+  const deleteOriginalMenu = async (menuId: string): Promise<void> => {
+    await originalMenuCRUDService.deleteOriginalMenu(menuId);
+  };
+
+  // 画像関連の処理をPresenter層で提供
+  const uploadMenuImage = async (menuId: string, imageFile: File): Promise<void> => {
+    await imageService.uploadMenuImage(menuId, imageFile);
+  };
+
+  const deleteMenuImage = async (menuId: string): Promise<void> => {
+    await imageService.deleteMenuImage(menuId);
+  };
+
+  const getMenuImageUrl = async (menuId: string): Promise<string | null> => {
+    try {
+      return await imageService.getMenuImageUrlById(menuId);
+    } catch (error) {
+      console.error("画像の取得に失敗しました:", error);
+      return null;
+    }
+  };
+
   return {
     originalMenus,
     loading,
@@ -52,5 +87,11 @@ export const useOriginalMenuPresenter = (menuService: MenuService) => {
     getMenusByCategory,
     getAllMenus,
     refresh,
+    saveOriginalMenu,
+    deleteOriginalMenu,
+    // 画像操作メソッドを追加
+    uploadMenuImage,
+    deleteMenuImage,
+    getMenuImageUrl,
   };
 };

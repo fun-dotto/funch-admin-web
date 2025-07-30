@@ -11,14 +11,7 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "../src/infrastructure/firebase";
 import { useCalendarMenuPresenter } from "../src/presenters/CalendarPresenter";
-import { CalendarMenuService } from "../src/services/CalendarService";
-import { FirebaseCalendarMenuRepository } from "../src/repositories/firebase/CalendarRepository";
-import { FirebaseChangeMenuRepository } from "../src/repositories/firebase/ChangeMenuRepository";
 import { MenuItemList, DisplayMenuItem } from "./MenuItemList";
-
-const calendarMenuRepository = new FirebaseCalendarMenuRepository();
-const changeMenuRepository = new FirebaseChangeMenuRepository();
-const calendarMenuService = new CalendarMenuService(calendarMenuRepository, changeMenuRepository);
 
 type CalendarProps = {
   year?: number;
@@ -63,7 +56,6 @@ const Calendar = forwardRef<CalendarRef, CalendarProps>(
       user,
       currentYear,
       currentMonth,
-      calendarMenuService
     );
 
     useEffect(() => {

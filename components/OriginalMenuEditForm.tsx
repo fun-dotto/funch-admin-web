@@ -8,7 +8,6 @@ import { Checkbox } from "./ui/checkbox";
 import { PriceInput } from "./ui/PriceInput";
 import { Button } from "./ui/button";
 import { ImageUpload } from "./ui/ImageUpload";
-import { ImageService } from "../src/services/ImageService";
 
 type Option = {
   value: string;
@@ -20,6 +19,10 @@ type OriginalMenuEditFormProps = {
   onCancel: () => void;
   onSave?: (updatedMenu: OriginalMenu, imageFile?: File) => void;
   onDelete?: (menuId: string) => void;
+  // 画像操作用の関数をPropsで受け取る
+  onUploadImage?: (menuId: string, imageFile: File) => Promise<void>;
+  onDeleteImage?: (menuId: string) => Promise<void>;
+  onGetImageUrl?: (menuId: string) => Promise<string | null>;
 };
 
 export const OriginalMenuEditForm: FC<OriginalMenuEditFormProps> = ({
@@ -27,6 +30,9 @@ export const OriginalMenuEditForm: FC<OriginalMenuEditFormProps> = ({
   onCancel,
   onSave,
   onDelete,
+  onUploadImage,
+  onDeleteImage,
+  onGetImageUrl,
 }) => {
   const [editMenu, setEditMenu] = useState<OriginalMenu>(menu);
   // チェックボックスの状態を独立して管理
@@ -38,19 +44,18 @@ export const OriginalMenuEditForm: FC<OriginalMenuEditFormProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [showExistingImage, setShowExistingImage] = useState(true);
-  const [imageService] = useState(() => new ImageService());
 
   // 既存画像を取得（新規作成時は除く）
   useEffect(() => {
     const loadExistingImage = async () => {
-      if (!menu.id) {
-        // 新規作成時は画像を取得しない
+      if (!menu.id || !onGetImageUrl) {
+        // 新規作成時またはonGetImageUrlが無い場合は画像を取得しない
         setExistingImageUrl(null);
         return;
       }
 
       try {
-        const url = await imageService.getMenuImageUrlById(menu.id);
+        const url = await onGetImageUrl(menu.id);
         setExistingImageUrl(url);
       } catch (error) {
         console.error("既存画像の取得に失敗しました:", error);
@@ -58,7 +63,7 @@ export const OriginalMenuEditForm: FC<OriginalMenuEditFormProps> = ({
     };
 
     loadExistingImage();
-  }, [menu.id, imageService]);
+  }, [menu.id, onGetImageUrl]);
 
   const categoryOptions: Option[] = [
     { value: "1", label: "主菜" },
@@ -173,13 +178,13 @@ export const OriginalMenuEditForm: FC<OriginalMenuEditFormProps> = ({
         } else {
           // 既存メニューの編集の場合
           // 既存画像を削除する場合（UIで非表示にされている場合）
-          if (existingImageUrl && !showExistingImage && !imageFile) {
-            await imageService.deleteMenuImage(editMenu.id);
+          if (existingImageUrl && !showExistingImage && !imageFile && onDeleteImage) {
+            await onDeleteImage(editMenu.id);
           }
 
           // 新しい画像がある場合はアップロード
-          if (imageFile) {
-            await imageService.uploadMenuImage(editMenu.id, imageFile);
+          if (imageFile && onUploadImage) {
+            await onUploadImage(editMenu.id, imageFile);
           }
 
           onSave(editMenu);
@@ -196,7 +201,9 @@ export const OriginalMenuEditForm: FC<OriginalMenuEditFormProps> = ({
     if (onDelete && window.confirm("このメニューを削除しますか？")) {
       try {
         // 画像も削除
-        await imageService.deleteMenuImage(editMenu.id);
+        if (onDeleteImage) {
+          await onDeleteImage(editMenu.id);
+        }
         onDelete(editMenu.id);
       } catch (error) {
         console.error("画像の削除に失敗しました:", error);

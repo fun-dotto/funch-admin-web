@@ -1,16 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { User } from "firebase/auth";
 import { Menu, OriginalMenu, MenuItem } from "../types/Menu";
-import { MonthMenuService } from "../services/MonthMenuService";
-import { ChangeMenuService } from "../services/ChangeMenuService";
+import { ServiceFactory } from "../services/ServiceFactory";
 
 export const useMonthMenuPresenter = (
   user: User | null,
   currentYear: number,
-  currentMonth: number,
-  monthMenuService: MonthMenuService,
-  changeMenuService: ChangeMenuService
+  currentMonth: number
 ) => {
+  // Presenter層はService層のみに依存（Repository層は知らない）
+  const services = useMemo(() => {
+    const monthMenuService = ServiceFactory.createMonthMenuService();
+    const changeMenuService = ServiceFactory.createChangeMenuService();
+    return { monthMenuService, changeMenuService };
+  }, []);
+
+  const { monthMenuService, changeMenuService } = services;
   const [menus, setMenus] = useState<Menu[]>([]);
   const [originalMenus, setOriginalMenus] = useState<OriginalMenu[]>([]);
   const [monthlyChangeData, setMonthlyChangeData] = useState<{
@@ -320,6 +325,16 @@ export const useMonthMenuPresenter = (
     }
   };
 
+  const revertChange = async (menuId: string, isCommonMenu: boolean) => {
+    await changeMenuService.removeMonthlyChangeEntry(
+      currentYear,
+      currentMonth,
+      menuId,
+      !isCommonMenu
+    );
+    await refreshMonthlyChangeOnly();
+  };
+
   return {
     menus,
     originalMenus,
@@ -335,5 +350,6 @@ export const useMonthMenuPresenter = (
     refreshMonthlyChangeOnly, // 🚀 新機能
     refreshAllMenusData, // 🚀 メニューデータ再取得
     getMenuNameById,
+    revertChange,
   };
 };

@@ -10,18 +10,10 @@ import React, {
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "../src/infrastructure/firebase";
 import { useMonthMenuPresenter } from "../src/presenters/MonthMenuPresenter";
-import { MonthMenuService } from "../src/services/MonthMenuService";
-import { FirebaseMonthMenuRepository } from "../src/repositories/firebase/MonthMenuRepository";
 import { Menu, OriginalMenu } from "../src/types/Menu";
 import { useDroppable } from "@dnd-kit/core";
 import { MenuItemList, DisplayMenuItem } from "./MenuItemList";
-import { ChangeMenuService } from "../src/services/ChangeMenuService";
-import { FirebaseChangeMenuRepository } from "../src/repositories/firebase/ChangeMenuRepository";
 import { RemainingMenuDialog } from "./RemainingMenuDialog";
-
-const monthMenuRepository = new FirebaseMonthMenuRepository();
-const monthMenuService = new MonthMenuService(monthMenuRepository);
-const changeMenuService = new ChangeMenuService(new FirebaseChangeMenuRepository());
 
 type MonthMenuProps = {
   year: number;
@@ -64,7 +56,8 @@ const MonthMenu = forwardRef<MonthMenuRef, MonthMenuProps>(
       refreshMonthlyChangeOnly,
       refreshAllMenusData,
       getMenuNameById,
-    } = useMonthMenuPresenter(user, year, month, monthMenuService, changeMenuService);
+      revertChange,
+    } = useMonthMenuPresenter(user, year, month);
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -115,13 +108,7 @@ const MonthMenu = forwardRef<MonthMenuRef, MonthMenuProps>(
       menuId: string,
       isCommonMenu: boolean
     ) => {
-      await changeMenuService.removeMonthlyChangeEntry(
-        year,
-        month,
-        menuId,
-        !isCommonMenu
-      );
-      await refreshMonthlyChangeOnly();
+      await revertChange(menuId, isCommonMenu);
     };
 
     if (!user) {
