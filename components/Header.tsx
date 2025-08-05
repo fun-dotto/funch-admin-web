@@ -1,29 +1,16 @@
 import Image from "next/image";
-import { onAuthStateChanged, signInWithPopup, User } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { signInWithPopup } from "firebase/auth";
 import { FaGoogle } from "react-icons/fa";
 import { auth, provider } from "../src/infrastructure/firebase";
+import { useAuth } from "../src/contexts/AuthContext";
 import { Button } from "./ui/button";
 import { IoIosArrowBack } from "react-icons/io";
 
 export default function Header() {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [setUser]);
+  const { user } = useAuth();
 
   const handleLogout = () => {
     auth.signOut();
-    setUser(null);
   };
 
   const signInwithGoogle = async () => {

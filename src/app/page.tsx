@@ -1,8 +1,7 @@
 "use client";
 
-import { onAuthStateChanged, User } from "firebase/auth";
 import { useEffect, useState, useRef } from "react";
-import { auth } from "../infrastructure/firebase";
+import { useAuth } from "../contexts/AuthContext";
 import Header from "../../components/Header";
 import Calendar, { CalendarRef } from "@/components/Calendar";
 import MonthMenu, { MonthMenuRef } from "@/components/MonthMenu";
@@ -23,7 +22,7 @@ const changeMenuRepository = new FirebaseChangeMenuRepository();
 const changeMenuService = new ChangeMenuService(changeMenuRepository);
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useAuth();
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [activeMenu, setActiveMenu] = useState<MenuItem | null>(null);
@@ -184,18 +183,6 @@ export default function Home() {
       setActiveMenu(null);
     }
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [setUser]);
 
   return (
     <div className="bg-[#eee] w-screen h-screen flex flex-col">

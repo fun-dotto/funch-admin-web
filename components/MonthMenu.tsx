@@ -2,13 +2,11 @@
 
 import React, {
   ReactNode,
-  useEffect,
   useState,
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "../src/infrastructure/firebase";
+import { useAuth } from "../src/contexts/AuthContext";
 import { useMonthMenuPresenter } from "../src/presenters/MonthMenuPresenter";
 import { Menu, OriginalMenu } from "../src/types/Menu";
 import { useDroppable } from "@dnd-kit/core";
@@ -37,7 +35,7 @@ export type MonthMenuRef = {
 
 const MonthMenu = forwardRef<MonthMenuRef, MonthMenuProps>(
   ({ year, month, onAddMenu, onAddOriginalMenu, onDragEnd, children }, ref) => {
-    const [user, setUser] = useState<User | null>(null);
+    const { user } = useAuth();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [remainingItems, setRemainingItems] = useState<DisplayMenuItem[]>([]);
 
@@ -59,17 +57,6 @@ const MonthMenu = forwardRef<MonthMenuRef, MonthMenuProps>(
       revertChange,
     } = useMonthMenuPresenter(user, year, month);
 
-    useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          setUser(user);
-        } else {
-          setUser(null);
-        }
-      });
-
-      return () => unsubscribe();
-    }, [setUser]);
 
     useImperativeHandle(ref, () => ({
       refreshData,

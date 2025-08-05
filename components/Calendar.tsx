@@ -3,13 +3,11 @@
 import React, {
   ReactNode,
   useEffect,
-  useState,
   forwardRef,
   useImperativeHandle,
 } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "../src/infrastructure/firebase";
+import { useAuth } from "../src/contexts/AuthContext";
 import { useCalendarMenuPresenter } from "../src/presenters/CalendarPresenter";
 import { MenuItemList, DisplayMenuItem } from "./MenuItemList";
 
@@ -36,7 +34,7 @@ export type CalendarRef = {
 
 const Calendar = forwardRef<CalendarRef, CalendarProps>(
   ({ year, month, children, monthlyChangeData }, ref) => {
-    const [user, setUser] = useState<User | null>(null);
+    const { user } = useAuth();
     const currentYear = year || new Date().getFullYear();
     const currentMonth = month || new Date().getMonth() + 1;
 
@@ -58,17 +56,6 @@ const Calendar = forwardRef<CalendarRef, CalendarProps>(
       currentMonth,
     );
 
-    useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          setUser(user);
-        } else {
-          setUser(null);
-        }
-      });
-
-      return () => unsubscribe();
-    }, [setUser]);
 
     useImperativeHandle(ref, () => ({
       refreshData,
